@@ -11,11 +11,7 @@ import com.example.API.entity.Cart;
 public interface CartRepository extends JpaRepository<Cart, Integer> {
     // Tìm toàn bộ sản phẩm trong giỏ của 1 tài khoản
     List<Cart> findByMaTk(String maTk);
-
+    
     // Kiểm tra xem sản phẩm này đã có trong giỏ của tài khoản này chưa
     Cart findByMaTkAndMaSp(String maTk, String maSp);
-
-    void deleteByMaTkAndMaSp(String maTk, String maSp);
-
-    void deleteByMaTk(String maTk);
 }

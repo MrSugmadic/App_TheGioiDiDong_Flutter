@@ -8,11 +8,40 @@ import 'package:the_gioi_di_dong/screens/cart/cart_screen.dart';
 import 'package:the_gioi_di_dong/models/product_model.dart';
 import 'package:the_gioi_di_dong/services/api_service.dart';
 import 'package:the_gioi_di_dong/screens/category/product_detail_screen.dart';
+import 'package:the_gioi_di_dong/screens/filter/filter_screen.dart';
 import '../../models/category_model.dart';
 import '../../screens/category/products_by_category_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _openFilterScreen(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (_, _, _) => const FilterScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.04),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +75,12 @@ class HomeScreen extends StatelessWidget {
                           AppConstants.defaultRadius,
                         ),
                       ),
-                      child: const TextField(
-                        decoration: InputDecoration(
+                      child: TextField(
+                        readOnly: true,
+                        onTap: () {
+                          _openFilterScreen(context);
+                        },
+                        decoration: const InputDecoration(
                           hintText: "Bạn tìm gì...",
                           hintStyle: TextStyle(
                             fontSize: 13,
@@ -330,7 +363,7 @@ class HomeScreen extends StatelessWidget {
                   top: Radius.circular(8),
                 ),
                 child: Image.asset(
-                  'assets/images/${product.imageUrl}',
+                  product.assetImagePath,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -381,7 +414,7 @@ class HomeScreen extends StatelessWidget {
                             product.id,
                             product.name,
                             product.price,
-                            product.imageUrl ?? 'laptop.jpg',
+                            product.imageUrl ?? 'hp_pavilion_15_1.jpg',
                           );
 
                           ScaffoldMessenger.of(context).showSnackBar(

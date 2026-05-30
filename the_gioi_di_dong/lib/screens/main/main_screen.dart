@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 1. THÊM IMPORT NÀY
 import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/screens/home/home_screen.dart';
-import 'package:the_gioi_di_dong/screens/notification/notification_screen.dart';
 import 'package:the_gioi_di_dong/screens/profile/profile_screen.dart';
 import 'package:the_gioi_di_dong/screens/category/category_screen.dart';
+import 'package:the_gioi_di_dong/screens/notification/notification_screen.dart';
 import 'package:the_gioi_di_dong/screens/auth/login_screen.dart'; // 2. IMPORT TRANG ĐĂNG NHẬP
-import '../chatbot/chatbot_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex; // Thêm dòng này để nhận yêu cầu từ bên ngoài
@@ -85,17 +84,6 @@ class _MainScreenState extends State<MainScreen> {
         children: screens, // Dùng danh sách screens vừa khởi tạo ở trên
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primaryThis,
-        child: const Icon(Icons.chat, color: Colors.black),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ChatBotScreen()),
-          );
-        },
-      ),
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed, // Giữ icon không bị nhảy khi chọn
         currentIndex: _selectedIndex,
@@ -120,7 +108,7 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Danh mục',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.headphones_battery),
+            icon: Icon(Icons.notifications_none),
             activeIcon: Icon(Icons.notifications),
             label: 'Thông báo', // Đổi chữ thường thành chữ Hoa cho đẹp
           ),

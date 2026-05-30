@@ -4,10 +4,6 @@ import 'package:the_gioi_di_dong/screens/auth/register_screen.dart';
 import 'package:the_gioi_di_dong/screens/main/main_screen.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/core/constants.dart';
-import 'package:the_gioi_di_dong/screens/order/order_detail_screen.dart';
-import 'package:the_gioi_di_dong/screens/order/order_list_screen.dart';
-
-// -------------------------------------------------------------
 
 class ProfileScreen extends StatefulWidget {
   final String userEmail; // NHẬN TỪ NGOÀI VÀO
@@ -127,62 +123,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // --- TRƯỜNG HỢP 2: GIAO DIỆN ĐÃ ĐĂNG NHẬP (USER) ---
-
-  // ĐÃ SỬA: Thêm onTap vào hàm này để cho phép bấm
   Widget _buildOrderStatusItem(
     IconData icon,
     String label, {
     int badgeCount = 0,
-    VoidCallback? onTap, // <--- Thêm tham số này
   }) {
-    // Bao bọc bởi InkWell để tạo hiệu ứng bấm và nhận sự kiện
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-        child: Column(
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, color: Colors.black87, size: 28),
-                if (badgeCount > 0)
-                  Positioned(
-                    right: -5,
-                    top: -5,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '$badgeCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+            Icon(icon, color: Colors.black87, size: 28),
+            if (badgeCount > 0)
+              Positioned(
+                right: -5,
+                top: -5,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
                   ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 11),
-              textAlign: TextAlign.center,
-            ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -203,6 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Icon(Icons.person, size: 50),
                 ),
                 const SizedBox(height: 10),
+                // Hiện email thật từ SharedPreferences
                 Text(
                   _userEmail.isNotEmpty ? _userEmail : "Người dùng",
                   style: const TextStyle(
@@ -212,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 5),
                 TextButton(
-                  onPressed: _handleLogout,
+                  onPressed: _handleLogout, // Gọi hàm logout thật
                   child: const Text(
                     "Thoát tài khoản",
                     style: TextStyle(color: Colors.black54, fontSize: 12),
@@ -252,50 +238,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Icons.query_builder,
                       "Chờ xác nhận",
                       badgeCount: 3,
-                      // ĐÃ SỬA: Chèn sự kiện chuyển trang vào Icon Chờ Xác Nhận
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OrderDetailScreen(
-                              order: MockOrder(
-                                orderId: 'DH100234',
-                                status: 'Chờ xác nhận',
-                                orderDate: '20:30 - 30/05/2026',
-                                customerName: 'Anh Long',
-                                phone: '0987654321',
-                                address:
-                                    '123 Đường Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP.HCM',
-                                shippingFee: 30000,
-                                totalAmount: 28030000,
-                                items: [
-                                  MockOrderItem(
-                                    name: 'MacBook Pro M2 2022',
-                                    imageUrl: 'assets/images/laptop.png',
-                                    quantity: 1,
-                                    price: 28000000,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
                     ),
                     _buildOrderStatusItem(
                       Icons.local_shipping_outlined,
                       "Đang giao",
                       badgeCount: 2,
-                      // Thêm sự kiện chuyển trang vào đây:
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const OrderListScreen(status: 'Đang giao'),
-                          ),
-                        );
-                      },
                     ),
                     _buildOrderStatusItem(
                       Icons.inbox_outlined,
@@ -337,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             "Đăng xuất",
             textColor: Colors.red,
             iconColor: Colors.red,
-            onTap: _handleLogout,
+            onTap: _handleLogout, // Nút đăng xuất cũng gọi hàm logout thật
           ),
         ],
       ),
