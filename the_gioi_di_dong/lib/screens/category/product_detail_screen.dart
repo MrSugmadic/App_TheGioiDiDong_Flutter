@@ -3,12 +3,33 @@ import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
 import 'package:the_gioi_di_dong/models/product_detail_model.dart';
 import 'package:the_gioi_di_dong/models/product_model.dart';
+import 'package:the_gioi_di_dong/screens/compare/compare_picker_screen.dart';
 import 'package:the_gioi_di_dong/services/api_service.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
 
   const ProductDetailScreen({super.key, required this.product});
+
+  void _openComparePicker(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ComparePickerScreen(baseProduct: product),
+      ),
+    );
+  }
+
+  Future<void> _addToCart(BuildContext context) async {
+    final success = await ApiService.addToCart('TK_KH001', product.id, 1);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? 'Đã thêm vào giỏ hàng!' : 'Lỗi thêm vào giỏ!'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,36 +143,47 @@ class ProductDetailScreen extends StatelessWidget {
           color: Colors.white,
           boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryThis,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          icon: const Icon(Icons.add_shopping_cart),
-          label: const Text(
-            'THÊM VÀO GIỎ HÀNG',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          onPressed: () async {
-            final success = await ApiService.addToCart(
-              'TK_KH001',
-              product.id,
-              1,
-            );
-            if (!context.mounted) return;
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  success ? 'Đã thêm vào giỏ hàng!' : 'Lỗi thêm vào giỏ!',
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  minimumSize: const Size(double.infinity, 50),
+                  side: const BorderSide(color: AppColors.primaryThis),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                icon: const Icon(Icons.compare_arrows),
+                label: const Text(
+                  'SO SÁNH',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () => _openComparePicker(context),
               ),
-            );
-          },
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryThis,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text(
+                  'THÊM VÀO GIỎ',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () => _addToCart(context),
+              ),
+            ),
+          ],
         ),
       ),
     );

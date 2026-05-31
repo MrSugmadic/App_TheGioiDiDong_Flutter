@@ -209,4 +209,46 @@ class ApiService {
       throw Exception('Loi server: ${response.statusCode}');
     }
   }
+
+  static Future<List<Map<String, dynamic>>> fetchAdminOrders() async {
+    final response = await http.get(Uri.parse('$baseUrl/admin/orders'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+      return body.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw Exception('Loi server: ${response.statusCode}');
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchAdminAccounts() async {
+    final response = await http.get(Uri.parse('$baseUrl/admin/accounts'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+      return body.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw Exception('Loi server: ${response.statusCode}');
+  }
+
+  static Future<void> adminPatch(String path, Map<String, dynamic> data) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/admin/$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Loi server: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> adminDelete(String path) async {
+    final response = await http.delete(Uri.parse('$baseUrl/admin/$path'));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Loi server: ${response.statusCode}');
+    }
+  }
 }
