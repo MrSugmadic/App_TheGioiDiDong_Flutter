@@ -1,54 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
+import 'package:provider/provider.dart';
+import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
-import 'order_detail_screen.dart'; // Import cái file chi tiết đơn hàng hôm trước để xài ké MockOrder
+import 'package:the_gioi_di_dong/providers/user_profile_provider.dart';
+
+import 'order_detail_screen.dart';
 
 class OrderListScreen extends StatelessWidget {
-  final String status; // Trạng thái đơn hàng (VD: "Đang giao", "Chờ xác nhận")
+  final String status;
 
   const OrderListScreen({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
-    // TẠM THỜI: Tạo ra 2 cái đơn hàng giả lập đang giao để test giao diện
-    final List<MockOrder> dummyOrders = [
-      MockOrder(
-        orderId: 'DH100999',
-        status: status,
-        orderDate: '08:00 - 31/05/2026',
-        customerName: 'Anh Long',
-        phone: '0987654321',
-        address: '123 Đường Điện Biên Phủ, Quận Bình Thạnh, TP.HCM',
-        shippingFee: 30000,
-        totalAmount: 34030000,
-        items: [
-          MockOrderItem(
-            name: 'iPhone 15 Pro Max 256GB',
-            imageUrl: 'assets/images/laptop.png',
-            quantity: 1,
-            price: 34000000,
-          ),
-        ],
-      ),
-      MockOrder(
-        orderId: 'DH100888',
-        status: status,
-        orderDate: '15:20 - 29/05/2026',
-        customerName: 'Anh Long',
-        phone: '0987654321',
-        address: '123 Đường Điện Biên Phủ, Quận Bình Thạnh, TP.HCM',
-        shippingFee: 15000,
-        totalAmount: 515000,
-        items: [
-          MockOrderItem(
-            name: 'Sạc dự phòng Samsung 10000mAh',
-            imageUrl: 'assets/images/laptop.png',
-            quantity: 1,
-            price: 500000,
-          ),
-        ],
-      ),
-    ];
+    final profile = context.watch<UserProfileProvider>();
+    final orders = _buildDummyOrders(profile);
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -58,50 +24,87 @@ class OrderListScreen extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppColors.primaryThis,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: dummyOrders.isEmpty
+      body: orders.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: dummyOrders.length,
+              padding: const EdgeInsets.all(12),
+              itemCount: orders.length,
               itemBuilder: (context, index) {
-                final order = dummyOrders[index];
-                return _buildOrderCard(context, order);
+                return _buildOrderCard(context, orders[index]);
               },
             ),
     );
   }
 
-  // Khối thiết kế cho 1 thẻ Đơn hàng
-  Widget _buildOrderCard(BuildContext context, MockOrder order) {
-    return GestureDetector(
-      onTap: () {
-        // Bấm vào thẻ thì bay sang màn hình Chi tiết đơn hàng
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OrderDetailScreen(order: order),
+  List<MockOrder> _buildDummyOrders(UserProfileProvider profile) {
+    final firstStatus = status == 'Tất cả' ? 'Đang giao' : status;
+    final secondStatus = status == 'Tất cả' ? 'Chờ xác nhận' : status;
+
+    return [
+      MockOrder(
+        orderId: 'DH100999',
+        status: firstStatus,
+        orderDate: '08:00 - 31/05/2026',
+        customerName: profile.name.isEmpty ? 'Khách hàng' : profile.name,
+        phone: profile.phone,
+        address: profile.address.isEmpty
+            ? 'Chưa cập nhật địa chỉ'
+            : profile.address,
+        shippingFee: 30000,
+        totalAmount: 34030000,
+        items: const [
+          MockOrderItem(
+            name: 'MacBook Pro 14 M3 512GB',
+            imageUrl: 'assets/images/macbook_pro_14_m3_1.jpg',
+            quantity: 1,
+            price: 34000000,
           ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 2,
-              offset: Offset(0, 1),
+        ],
+      ),
+      MockOrder(
+        orderId: 'DH100888',
+        status: secondStatus,
+        orderDate: '15:20 - 29/05/2026',
+        customerName: profile.name.isEmpty ? 'Khách hàng' : profile.name,
+        phone: profile.phone,
+        address: profile.address.isEmpty
+            ? 'Chưa cập nhật địa chỉ'
+            : profile.address,
+        shippingFee: 15000,
+        totalAmount: 515000,
+        items: const [
+          MockOrderItem(
+            name: 'Lenovo IdeaCentre 3',
+            imageUrl: 'assets/images/lenovo_ideacentre_3_1.jpg',
+            quantity: 1,
+            price: 500000,
+          ),
+        ],
+      ),
+    ];
+  }
+
+  Widget _buildOrderCard(BuildContext context, MockOrder order) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrderDetailScreen(order: order),
             ),
-          ],
-        ),
+          );
+        },
         child: Column(
           children: [
-            // Header: Mã đơn + Trạng thái
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -116,31 +119,18 @@ class OrderListScreen extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
-                    ), // Màu xanh cho Đang giao
+                    ),
                   ),
                 ],
               ),
             ),
             const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-
-            // Body: Hình ảnh và thông tin món hàng đầu tiên
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image.asset(
-                      order.items.first.imageUrl,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                  _buildProductImage(order.items.first.imageUrl, 70),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -175,8 +165,6 @@ class OrderListScreen extends StatelessWidget {
               ),
             ),
             const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
-
-            // Footer: Tổng tiền và Nút bấm
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -199,12 +187,11 @@ class OrderListScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Nút Đã nhận được hàng (dành riêng cho trạng thái Đang giao)
-                  if (status == 'Đang giao')
+                  if (order.status == 'Đang giao')
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryThis,
-                        foregroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -227,7 +214,25 @@ class OrderListScreen extends StatelessWidget {
     );
   }
 
-  // Giao diện khi không có đơn hàng nào
+  Widget _buildProductImage(String imageUrl, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        imageUrl,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.image_not_supported, color: Colors.grey);
+        },
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(

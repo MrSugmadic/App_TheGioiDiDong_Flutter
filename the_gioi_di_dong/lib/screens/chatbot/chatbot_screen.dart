@@ -16,7 +16,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  static const String chatKey = 'tgdd_chat_history';
+  static const String _chatKeyPrefix = 'tgdd_chat_history';
 
   bool isLoading = false;
 
@@ -43,8 +43,30 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     loadChatHistory();
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  String _getChatKey(SharedPreferences prefs) {
+    final maTk = prefs.getString('maTk')?.trim();
+    if (maTk != null && maTk.isNotEmpty) {
+      return '${_chatKeyPrefix}_user_$maTk';
+    }
+
+    final email = prefs.getString('userEmail')?.trim().toLowerCase();
+    if (email != null && email.isNotEmpty) {
+      return '${_chatKeyPrefix}_email_$email';
+    }
+
+    return '${_chatKeyPrefix}_guest';
+  }
+
   Future<void> saveChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
+    final chatKey = _getChatKey(prefs);
 
     final messagesToSave = messages
         .where((item) => item['text'] != 'Đang nhập...')
@@ -56,7 +78,17 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
   Future<void> loadChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(chatKey);
+    final chatKey = _getChatKey(prefs);
+    var jsonString = prefs.getString(chatKey);
+
+    if (jsonString == null) {
+      final oldJsonString = prefs.getString(_chatKeyPrefix);
+      if (oldJsonString != null) {
+        await prefs.setString(chatKey, oldJsonString);
+        await prefs.remove(_chatKeyPrefix);
+        jsonString = oldJsonString;
+      }
+    }
 
     if (jsonString == null) return;
 
@@ -81,6 +113,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
   Future<void> clearChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
+    final chatKey = _getChatKey(prefs);
     await prefs.remove(chatKey);
 
     setState(() {
@@ -152,6 +185,8 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
       history: historyForAI,
     );
 
+    if (!mounted) return;
+
     setState(() {
       messages.removeLast();
 
@@ -186,7 +221,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -241,7 +276,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 ).copyWith(bottomLeft: const Radius.circular(4)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -313,7 +348,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -370,7 +405,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),

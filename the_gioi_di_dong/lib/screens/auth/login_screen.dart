@@ -57,6 +57,10 @@ class _LoginScreenState extends State<LoginScreen> {
               email,
             ); // Lưu luôn email để lát hiện lên Profile
             await prefs.setString('maTk', userData['id']?.toString() ?? '');
+            await prefs.setString(
+              'userRole',
+              userData['role']?.toString() ?? 'KhachHang',
+            );
             // -------------------------------
             if (!mounted) return;
 
@@ -68,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                // THÊM THAM SỐ initialIndex: 3 VÀO ĐÂY NÈ ÔNG!
+                // Mở tab Cá nhân sau khi đăng nhập thành công.
                 builder: (context) => const MainScreen(initialIndex: 3),
               ),
             );

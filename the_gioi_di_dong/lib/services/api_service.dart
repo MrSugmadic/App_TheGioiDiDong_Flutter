@@ -6,6 +6,7 @@ import '../models/product_model.dart';
 import '../models/category_model.dart';
 import '../models/cart_model.dart';
 import '../models/notification_model.dart';
+import '../models/order_model.dart';
 import '../models/product_detail_model.dart';
 
 class ApiService {
@@ -64,12 +65,20 @@ class ApiService {
   }
 
   //KTRA TAI KHOAN
-  static Future<String?> register(String email, String password) async {
+  static Future<String?> register(
+    String email,
+    String password, {
+    String? hoTen,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/register'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+          if (hoTen != null && hoTen.trim().isNotEmpty) "hoTen": hoTen.trim(),
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -80,6 +89,44 @@ class ApiService {
       }
     } catch (e) {
       return "Lỗi kết nối: $e";
+    }
+  }
+
+  static Future<Map<String, dynamic>?> fetchUserProfile(String maTk) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/auth/profile/$maTk'));
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes));
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> updateUserProfile({
+    required String maTk,
+    required String hoTen,
+    required String soDienThoai,
+    required String diaChi,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/auth/profile/$maTk'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'hoTen': hoTen,
+          'soDienThoai': soDienThoai,
+          'diaChi': diaChi,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes));
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -208,5 +255,103 @@ class ApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Loi server: ${response.statusCode}');
     }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchAdminOrders() async {
+    final response = await http.get(Uri.parse('$baseUrl/admin/orders'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+      return body.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw Exception('Loi server: ${response.statusCode}');
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchAdminAccounts() async {
+    final response = await http.get(Uri.parse('$baseUrl/admin/accounts'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+      return body.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw Exception('Loi server: ${response.statusCode}');
+  }
+
+  static Future<void> adminPatch(String path, Map<String, dynamic> data) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/admin/$path'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Loi server: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> adminDelete(String path) async {
+    final response = await http.delete(Uri.parse('$baseUrl/admin/$path'));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Loi server: ${response.statusCode}');
+    }
+  }
+
+  static Future<OrderModel?> createOrder({
+    required String maTk,
+    required String hoTen,
+    required String soDienThoai,
+    required String diaChi,
+    required String phuongThucThanhToan,
+    required String maGiamGia,
+    required double tongTien,
+    required double giamGia,
+    required double thanhTien,
+    required List<OrderItemModel> items,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'maTk': maTk,
+          'hoTen': hoTen,
+          'soDienThoai': soDienThoai,
+          'diaChi': diaChi,
+          'phuongThucThanhToan': phuongThucThanhToan,
+          'maGiamGia': maGiamGia,
+          'tongTien': tongTien,
+          'giamGia': giamGia,
+          'thanhTien': thanhTien,
+          'items': items.map((item) => item.toJson()).toList(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> clearCartOnServer(String maTk) async {
+    if (maTk.isEmpty) return;
+    await http.delete(Uri.parse('$baseUrl/cart/$maTk'));
+  }
+
+  static Future<Map<String, dynamic>> fetchAdminOrderDetail(String maHd) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/orders/${Uri.encodeComponent(maHd)}'),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    }
+
+    throw Exception('Loi server: ${response.statusCode}');
   }
 }

@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     // Lấy dữ liệu từ các ô nhập liệu
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPass = _confirmPasswordController.text.trim();
@@ -34,7 +35,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // ==========================================
 
     // 1.1 Kiểm tra không được để trống
-    if (email.isEmpty || password.isEmpty || confirmPass.isEmpty) {
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Vui lòng điền đầy đủ thông tin!")),
       );
@@ -64,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true); // Hiện vòng quay loading
 
     // Gọi hàm API (ông thay bằng hàm gọi API thực tế của ông nhé)
-    final isSuccess = await ApiService.register(email, password);
+    final isSuccess = await ApiService.register(email, password, hoTen: name);
 
     if (mounted) setState(() => _isLoading = false); // Tắt loading
 

@@ -4,6 +4,7 @@ import 'package:the_gioi_di_dong/providers/cart_provider.dart';
 import 'checkout_screen.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
+import 'package:the_gioi_di_dong/models/product_model.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -59,8 +60,8 @@ class CartScreen extends StatelessWidget {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                item.imageUrl,
+                              child: Image.asset(
+                                Product.imageAssetPath(item.imageUrl),
                                 width: 70,
                                 height: 70,
                                 fit: BoxFit.cover,

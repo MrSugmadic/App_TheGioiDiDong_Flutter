@@ -1,16 +1,35 @@
 import 'package:flutter/material.dart';
-import '../../models/product_model.dart';
-import '../../models/product_detail_model.dart';
-import '../../services/api_service.dart';
-import '../../core/app_colors.dart';
-import 'package:the_gioi_di_dong/core/utils.dart'; // Giả sử AppUtils nằm đây
-import 'package:provider/provider.dart';
-import '../../providers/cart_provider.dart';
+import 'package:the_gioi_di_dong/core/app_colors.dart';
+import 'package:the_gioi_di_dong/core/utils.dart';
+import 'package:the_gioi_di_dong/models/product_detail_model.dart';
+import 'package:the_gioi_di_dong/models/product_model.dart';
+import 'package:the_gioi_di_dong/screens/compare/compare_picker_screen.dart';
+import 'package:the_gioi_di_dong/services/api_service.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
 
   const ProductDetailScreen({super.key, required this.product});
+
+  void _openComparePicker(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ComparePickerScreen(baseProduct: product),
+      ),
+    );
+  }
+
+  Future<void> _addToCart(BuildContext context) async {
+    final success = await ApiService.addToCart('TK_KH001', product.id, 1);
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? 'Đã thêm vào giỏ hàng!' : 'Lỗi thêm vào giỏ!'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,22 +45,25 @@ class ProductDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Khu vực hình ảnh sản phẩm
             Container(
               height: 250,
               width: double.infinity,
               color: Colors.white,
               child: Image.asset(
-                product.imageUrl ??
-                    'assets/images/laptop.png', // Fallback image
+                product.assetImagePath,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 80,
+                    color: Colors.grey,
+                  );
+                },
               ),
             ),
             const Divider(height: 1),
-
-            // Khu vực thông tin cơ bản
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -67,20 +89,18 @@ class ProductDetailScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 20),
-
-                  // Khu vực thông số kỹ thuật chi tiết
                   const Text(
                     'Thông số kỹ thuật',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-
                   FutureBuilder<ProductDetailModel?>(
                     future: ApiService.getProductDetail(product.id),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
+
                       if (!snapshot.hasData || snapshot.data == null) {
                         return const Text(
                           'Không có thông tin cấu hình chi tiết cho sản phẩm này.',
@@ -117,88 +137,63 @@ class ProductDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-
-      // Thanh mua hàng dưới đáy - Đã được sửa thành nút Thêm vào giỏ hàng
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(12), // Tạo khoảng cách xung quanh nút
+        padding: const EdgeInsets.all(12),
         decoration: const BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, -2), // Bóng lên phía trên
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black87,
+                  minimumSize: const Size(double.infinity, 50),
+                  side: const BorderSide(color: AppColors.primaryThis),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.compare_arrows),
+                label: const Text(
+                  'SO SÁNH',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () => _openComparePicker(context),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryThis,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text(
+                  'THÊM VÀO GIỎ',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () => _addToCart(context),
+              ),
             ),
           ],
-        ),
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryThis, // Màu nền nút
-            foregroundColor: Colors.white, // Màu chữ và icon
-            minimumSize: const Size(
-              double.infinity,
-              50,
-            ), // Chiều rộng tối đa, chiều cao 50
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8), // Bo góc
-            ),
-          ),
-          icon: const Icon(Icons.add_shopping_cart), // Icon thêm vào giỏ
-          label: const Text(
-            'THÊM VÀO GIỎ HÀNG',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          onPressed: () async {
-            // Gọi ApiService để thêm sản phẩm vào giỏ hàng
-            final customerId = 'TK_KH001'; // Placeholder
-            final quantity = 1;
-            final success = await ApiService.addToCart(
-              customerId,
-              product.id,
-              quantity,
-            );
-
-            if (context.mounted) {
-              if (success) {
-                // CHÍNH LÀ DÒNG NÀY ĐÂY: Hét lên cho app biết là có hàng mới!
-                context.read<CartProvider>().addItem(
-                  product.id,
-                  product.name,
-                  product.price,
-                  product.imageUrl ?? 'laptop.jpg',
-                );
-
-                // Hiển thị thông báo thành công
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Đã thêm ${product.name} vào giỏ hàng.'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                // Hiển thị thông báo lỗi
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.',
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            }
-          },
         ),
       ),
     );
   }
 
-  // Hàm helper để tạo một dòng trong bảng thông số kỹ thuật
   TableRow _buildTableRow(String title, String value) {
     return TableRow(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Text(
             title,
             style: const TextStyle(
@@ -207,7 +202,7 @@ class ProductDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-        Padding(padding: const EdgeInsets.all(12.0), child: Text(value)),
+        Padding(padding: const EdgeInsets.all(12), child: Text(value)),
       ],
     );
   }

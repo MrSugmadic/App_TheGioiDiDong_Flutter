@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../core/app_colors.dart';
+import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
 
-// TẠM THỜI: Lớp OrderItem và Order giả lập để ông chạy thử lên UI.
-// Về sau ông xóa đi và import Model thật từ API của ông vào nhé!
 class MockOrderItem {
   final String name;
   final String imageUrl;
   final int quantity;
   final double price;
-  MockOrderItem({
+
+  const MockOrderItem({
     required this.name,
     required this.imageUrl,
     required this.quantity,
@@ -28,7 +27,7 @@ class MockOrder {
   final double shippingFee;
   final double totalAmount;
 
-  MockOrder({
+  const MockOrder({
     required this.orderId,
     required this.status,
     required this.orderDate,
@@ -41,11 +40,7 @@ class MockOrder {
   });
 }
 
-// ==========================================
-// MÀN HÌNH CHÍNH
-// ==========================================
 class OrderDetailScreen extends StatelessWidget {
-  // Thay MockOrder bằng Model thật của ông sau này
   final MockOrder order;
 
   const OrderDetailScreen({super.key, required this.order});
@@ -53,15 +48,14 @@ class OrderDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.grey[100], // Màu nền xám nhạt để làm nổi bật các khối trắng
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
           'Chi tiết đơn hàng',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppColors.primaryThis,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -78,12 +72,10 @@ class OrderDetailScreen extends StatelessWidget {
           ],
         ),
       ),
-      // Nút hành động ở dưới đáy (Hủy đơn / Mua lại)
       bottomNavigationBar: _buildBottomActions(context),
     );
   }
 
-  // 1. Khối trạng thái đơn hàng
   Widget _buildOrderStatusSection() {
     return Container(
       color: Colors.white,
@@ -94,13 +86,16 @@ class OrderDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Mã đơn hàng: ${order.orderId}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  'Mã đơn hàng: ${order.orderId}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
               Text(
                 order.status,
                 style: const TextStyle(
@@ -121,7 +116,6 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  // 2. Khối địa chỉ giao hàng
   Widget _buildShippingAddressSection() {
     return Container(
       color: Colors.white,
@@ -154,7 +148,6 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  // 3. Khối danh sách sản phẩm
   Widget _buildOrderItemsSection() {
     return Container(
       color: Colors.white,
@@ -170,28 +163,14 @@ class OrderDetailScreen extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          // Danh sách các món hàng
           ...order.items.map(
             (item) => Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hình ảnh sản phẩm
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Image.asset(
-                      item.imageUrl,
-                      fit: BoxFit.contain,
-                    ), // Thay bằng network image nếu lấy từ API
-                  ),
+                  _buildProductImage(item.imageUrl, 80),
                   const SizedBox(width: 12),
-                  // Thông tin sản phẩm
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,7 +213,25 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  // 4. Khối tính toán tiền bạc
+  Widget _buildProductImage(String imageUrl, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        imageUrl,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.image_not_supported, color: Colors.grey);
+        },
+      ),
+    );
+  }
+
   Widget _buildOrderSummarySection() {
     return Container(
       color: Colors.white,
@@ -283,68 +280,69 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  // 5. Nút điều hướng dưới đáy (Tùy theo trạng thái đơn mà hiện nút tương ứng)
   Widget _buildBottomActions(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Nếu đơn đang "Chờ xác nhận" thì cho phép Hủy
-          if (order.status == 'Chờ xác nhận')
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (order.status == 'Chờ xác nhận') ...[
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Colors.grey),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã gửi yêu cầu hủy đơn')),
+                    );
+                  },
+                  child: const Text(
+                    'HỦY ĐƠN',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
             Expanded(
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryThis,
+                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Colors.grey),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 onPressed: () {
-                  // Gọi API Hủy đơn hàng
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 child: const Text(
-                  'HỦY ĐƠN',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  'MUA LẠI',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-          if (order.status == 'Chờ xác nhận') const SizedBox(width: 12),
-
-          // Nút hành động chính (Mua lại / Liên hệ CSKH...)
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryThis,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                // Logic mua lại hoặc quay về trang chủ
-              },
-              child: const Text(
-                'MUA LẠI',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

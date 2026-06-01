@@ -1,18 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/core/constants.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
-import 'package:the_gioi_di_dong/providers/cart_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:the_gioi_di_dong/screens/cart/cart_screen.dart';
+import 'package:the_gioi_di_dong/models/category_model.dart';
 import 'package:the_gioi_di_dong/models/product_model.dart';
-import 'package:the_gioi_di_dong/services/api_service.dart';
+import 'package:the_gioi_di_dong/providers/cart_provider.dart';
+import 'package:the_gioi_di_dong/screens/cart/cart_screen.dart';
 import 'package:the_gioi_di_dong/screens/category/product_detail_screen.dart';
-import '../../models/category_model.dart';
-import '../../screens/category/products_by_category_screen.dart';
+import 'package:the_gioi_di_dong/screens/category/products_by_category_screen.dart';
+import 'package:the_gioi_di_dong/screens/compare/compare_picker_screen.dart';
+import 'package:the_gioi_di_dong/screens/filter/filter_screen.dart';
+import 'package:the_gioi_di_dong/services/api_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _openFilterScreen(BuildContext context) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 320),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (_, _, _) => const FilterScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.04),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _openCart(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CartScreen()),
+    );
+  }
+
+  void _openComparePicker(BuildContext context, Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ComparePickerScreen(baseProduct: product),
+      ),
+    );
+  }
+
+  void _addToCart(BuildContext context, Product product) {
+    context.read<CartProvider>().addItem(
+      product.id,
+      product.name,
+      product.price,
+      product.imageUrl ?? 'hp_pavilion_15_1.jpg',
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã thêm ${product.name} vào giỏ!'),
+        duration: const Duration(seconds: 1),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +83,6 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       body: CustomScrollView(
         slivers: [
-          // 1. App Bar với thanh tìm kiếm (Pinned)
           SliverAppBar(
             backgroundColor: AppColors.primaryThis,
             expandedHeight: 100,
@@ -46,9 +108,11 @@ class HomeScreen extends StatelessWidget {
                           AppConstants.defaultRadius,
                         ),
                       ),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: "Bạn tìm gì...",
+                      child: TextField(
+                        readOnly: true,
+                        onTap: () => _openFilterScreen(context),
+                        decoration: const InputDecoration(
+                          hintText: 'Bạn tìm gì...',
                           hintStyle: TextStyle(
                             fontSize: 13,
                             color: Colors.grey,
@@ -66,15 +130,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    onTap: () {
-                      // Mở trang Giỏ Hàng khi bấm vào icon
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CartScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _openCart(context),
                     child: Stack(
                       alignment: Alignment.center,
                       clipBehavior: Clip.none,
@@ -84,8 +140,6 @@ class HomeScreen extends StatelessWidget {
                           color: Colors.black,
                           size: 24,
                         ),
-
-                        // Hiển thị số lượng từ Nhà kho (CartProvider)
                         Consumer<CartProvider>(
                           builder: (context, cart, child) {
                             if (cart.itemCount == 0) return const SizedBox();
@@ -118,8 +172,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // 2. Banner Khuyến mãi
           SliverToBoxAdapter(
             child: Container(
               margin: const EdgeInsets.all(12),
@@ -136,8 +188,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // 3. Quick Categories (Lấy từ API Database)
           SliverToBoxAdapter(
             child: Container(
               height: 100,
@@ -146,18 +196,16 @@ class HomeScreen extends StatelessWidget {
               child: FutureBuilder<List<CategoryModel>>(
                 future: ApiService.getCategories(),
                 builder: (context, snapshot) {
-                  // Đang tải
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  // Bị lỗi hoặc không có dữ liệu
                   if (snapshot.hasError ||
                       !snapshot.hasData ||
                       snapshot.data!.isEmpty) {
                     return const Center(
                       child: Text(
-                        "Chưa có danh mục",
+                        'Chưa có danh mục',
                         style: TextStyle(color: Colors.grey),
                       ),
                     );
@@ -169,39 +217,17 @@ class HomeScreen extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
                     itemBuilder: (context, index) {
-                      final cat = categories[index];
-
-                      // 👉 Mẹo "nảy số" Icon: Tìm từ khóa trong tên danh mục để gán Icon tương ứng
-                      IconData iconData = Icons.category; // Icon mặc định
-                      String catName = cat.name.toLowerCase();
-
-                      if (catName.contains('laptop') ||
-                          catName.contains('máy tính')) {
-                        iconData = Icons.laptop_mac;
-                      } else if (catName.contains('phụ kiện') ||
-                          catName.contains('chuột')) {
-                        iconData = Icons.mouse;
-                      } else if (catName.contains('màn hình')) {
-                        iconData = Icons.monitor;
-                      } else if (catName.contains('máy in')) {
-                        iconData = Icons.print;
-                      } else if (catName.contains('linh kiện') ||
-                          catName.contains('ram')) {
-                        iconData = Icons.memory;
-                      } else if (catName.contains('tai nghe') ||
-                          catName.contains('âm thanh')) {
-                        iconData = Icons.headset;
-                      }
+                      final category = categories[index];
+                      final iconData = _categoryIcon(category.name);
 
                       return GestureDetector(
                         onTap: () {
-                          // 👉 Bấm vào đây cũng bay thẳng sang trang Sản phẩm theo loại
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ProductsByCategoryScreen(
-                                categoryId: cat.id,
-                                categoryName: cat.name,
+                                categoryId: category.id,
+                                categoryName: category.name,
                               ),
                             ),
                           );
@@ -211,8 +237,7 @@ class HomeScreen extends StatelessWidget {
                           child: Column(
                             children: [
                               CircleAvatar(
-                                backgroundColor:
-                                    Colors.grey[100], // Màu nền nhạt cho đẹp
+                                backgroundColor: Colors.grey[100],
                                 radius: 24,
                                 child: Icon(
                                   iconData,
@@ -222,13 +247,13 @@ class HomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                cat.name,
+                                category.name,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
                                 textAlign: TextAlign.center,
-                                maxLines: 1, // Tránh chữ dài quá bị rớt dòng
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -241,18 +266,15 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(AppConstants.defaultPadding),
               child: Text(
-                "MÁY TÍNH BÁN CHẠY",
+                'MÁY TÍNH BÁN CHẠY',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           ),
-
-          // 5. Grid Sản phẩm - LẤY TỪ JAVA API
           FutureBuilder<List<Product>>(
             future: ApiService.fetchProducts(),
             builder: (context, snapshot) {
@@ -267,7 +289,7 @@ class HomeScreen extends StatelessWidget {
 
               if (snapshot.hasError) {
                 return SliverToBoxAdapter(
-                  child: Center(child: Text("Lỗi: ${snapshot.error}")),
+                  child: Center(child: Text('Lỗi: ${snapshot.error}')),
                 );
               }
 
@@ -283,21 +305,41 @@ class HomeScreen extends StatelessWidget {
                     childAspectRatio: 0.75,
                   ),
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = products[index];
-                    return _buildProductCard(context, item);
+                    return _buildProductCard(context, products[index]);
                   }, childCount: products.length),
                 ),
               );
             },
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
         ],
       ),
     );
   }
 
-  // 👉 Đổi tham số nhận vào là 1 object Product
+  IconData _categoryIcon(String name) {
+    final normalizedName = name.toLowerCase();
+    if (normalizedName.contains('laptop') ||
+        normalizedName.contains('máy tính')) {
+      return Icons.laptop_mac;
+    }
+    if (normalizedName.contains('phụ kiện') ||
+        normalizedName.contains('chuột')) {
+      return Icons.mouse;
+    }
+    if (normalizedName.contains('màn hình')) return Icons.monitor;
+    if (normalizedName.contains('máy in')) return Icons.print;
+    if (normalizedName.contains('linh kiện') ||
+        normalizedName.contains('ram')) {
+      return Icons.memory;
+    }
+    if (normalizedName.contains('tai nghe') ||
+        normalizedName.contains('âm thanh')) {
+      return Icons.headset;
+    }
+    return Icons.category;
+  }
+
   Widget _buildProductCard(BuildContext context, Product product) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -330,7 +372,7 @@ class HomeScreen extends StatelessWidget {
                   top: Radius.circular(8),
                 ),
                 child: Image.asset(
-                  'assets/images/${product.imageUrl}',
+                  product.assetImagePath,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
@@ -347,12 +389,12 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.name, // Lấy tên
+                    product.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -361,49 +403,32 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppUtils.formatCurrency(product.price), // Lấy giá
-                        style: const TextStyle(
-                          color: AppColors.priceRed,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                      Expanded(
+                        child: Text(
+                          AppUtils.formatCurrency(product.price),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.priceRed,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-
-                      // Nút bấm thêm vào giỏ
-                      GestureDetector(
-                        onTap: () {
-                          context.read<CartProvider>().addItem(
-                            product.id,
-                            product.name,
-                            product.price,
-                            product.imageUrl ?? 'laptop.jpg',
-                          );
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Đã thêm ${product.name} vào giỏ!'),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryThis.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Icon(
-                            Icons.add_shopping_cart,
-                            color: AppColors.primaryThis,
-                            size: 20,
-                          ),
-                        ),
+                      _IconActionButton(
+                        icon: Icons.compare_arrows,
+                        color: Colors.blue,
+                        tooltip: 'So sánh',
+                        onTap: () => _openComparePicker(context, product),
+                      ),
+                      const SizedBox(width: 6),
+                      _IconActionButton(
+                        icon: Icons.add_shopping_cart,
+                        color: AppColors.primaryThis,
+                        tooltip: 'Thêm vào giỏ',
+                        onTap: () => _addToCart(context, product),
                       ),
                     ],
                   ),
@@ -411,6 +436,38 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IconActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _IconActionButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(icon, color: color, size: 20),
         ),
       ),
     );
