@@ -11,68 +11,85 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy dữ liệu giỏ hàng ra
     final cart = Provider.of<CartProvider>(context);
-    final items = cart.items.values
-        .toList(); // Chuyển Map thành List để dễ hiển thị
+    final items = cart.items.values.toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
           "Giỏ hàng (${cart.itemCount})",
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
+        backgroundColor: AppColors.primaryThis,
+        foregroundColor: Colors.white,
+        elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: items.isEmpty
-          ? const Center(child: Text("Giỏ hàng của bạn đang trống!"))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.remove_shopping_cart_outlined,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Giỏ hàng của bạn đang trống!",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
           : Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
                     itemCount: items.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       var item = items[index];
                       return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 15,
-                          vertical: 8,
-                        ),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(0.03),
                               blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                            // Ảnh sản phẩm
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Image.asset(
                                 Product.imageAssetPath(item.imageUrl),
                                 width: 70,
                                 height: 70,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                                 errorBuilder: (c, e, s) => const Icon(
-                                  Icons.image_not_supported,
-                                  size: 70,
+                                  Icons.laptop_mac,
+                                  size: 50,
                                   color: Colors.grey,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 12),
+                            // Thông tin sản phẩm
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,51 +99,75 @@ class CartScreen extends StatelessWidget {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
+                                      height: 1.3,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 5),
+                                  const SizedBox(height: 8),
                                   Text(
                                     AppUtils.formatCurrency(item.price),
                                     style: const TextStyle(
                                       color: AppColors.priceRed,
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 15,
                                     ),
                                   ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      // Nút Giảm
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
-                                          size: 22,
-                                        ),
-                                        onPressed: () =>
-                                            cart.decreaseItem(item.id),
+                                  const SizedBox(height: 8),
+                                  // Trình chỉnh số lượng dạng Pill
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
                                       ),
-                                      Text(
-                                        "${item.quantity}",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        InkWell(
+                                          onTap: () =>
+                                              cart.decreaseItem(item.id),
+                                          child: const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            child: Icon(
+                                              Icons.remove,
+                                              size: 18,
+                                              color: Colors.black54,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      // Nút Tăng (Tận dụng lại hàm addItem)
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.add_circle_outline,
-                                          size: 22,
-                                          color: Colors.green,
+                                        Text(
+                                          "${item.quantity}",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
                                         ),
-                                        onPressed: () => cart.addItem(
-                                          item.id,
-                                          item.name,
-                                          item.price,
-                                          item.imageUrl,
+                                        InkWell(
+                                          onTap: () => cart.addItem(
+                                            item.id,
+                                            item.name,
+                                            item.price,
+                                            item.imageUrl,
+                                          ),
+                                          child: const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 4,
+                                            ),
+                                            child: Icon(
+                                              Icons.add,
+                                              size: 18,
+                                              color: Colors.black54,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -138,14 +179,24 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
 
-                // KHUNG TỔNG TIỀN BÊN DƯỚI
+                // KHUNG THANH TOÁN BÊN DƯỚI
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 10),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
                     ],
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
                   child: SafeArea(
                     child: Row(
@@ -158,16 +209,15 @@ class CartScreen extends StatelessWidget {
                             const Text(
                               "Tổng thanh toán",
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 color: Colors.grey,
                               ),
                             ),
-
                             Text(
                               AppUtils.formatCurrency(cart.totalPrice),
                               style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.red,
+                                fontSize: 22,
+                                color: AppColors.priceRed,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -184,18 +234,20 @@ class CartScreen extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryThis,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 15,
+                              horizontal: 32,
+                              vertical: 14,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 0,
                           ),
                           child: const Text(
                             "MUA NGAY",
                             style: TextStyle(
-                              color: Color.fromARGB(255, 0, 0, 0),
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
                         ),

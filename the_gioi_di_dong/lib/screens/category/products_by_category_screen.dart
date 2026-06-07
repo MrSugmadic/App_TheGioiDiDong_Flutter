@@ -4,7 +4,7 @@ import '../../models/product_model.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants.dart';
 import '../../core/utils.dart';
-import 'product_detail_screen.dart'; 
+import 'product_detail_screen.dart';
 
 class ProductsByCategoryScreen extends StatelessWidget {
   final String categoryId;
@@ -19,18 +19,14 @@ class ProductsByCategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Colors.grey[100], // Nền xám nhạt để tôn thẻ sản phẩm lên
       appBar: AppBar(
         title: Text(
           categoryName,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: AppColors.textPrimary,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: AppColors.primaryThis,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
       ),
@@ -50,20 +46,20 @@ class ProductsByCategoryScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.wifi_off_rounded,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Không thể tải dữ liệu',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${snapshot.error}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -77,15 +73,12 @@ class ProductsByCategoryScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox_rounded, size: 64, color: AppColors.textSecondary),
+                  Icon(Icons.inbox_rounded, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
                     'Chưa có sản phẩm nào\ntrong danh mục này.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
@@ -99,35 +92,36 @@ class ProductsByCategoryScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header số lượng sản phẩm
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppConstants.defaultPadding,
-                  AppConstants.defaultPadding,
-                  AppConstants.defaultPadding,
-                  AppConstants.smallPadding,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
+                color: Colors.white,
                 child: Text(
-                  '${products.length} sản phẩm',
+                  'Tìm thấy ${products.length} sản phẩm',
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
 
-              // Danh sách sản phẩm
+              // Danh sách sản phẩm dạng LƯỚI (GridView)
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.defaultPadding,
-                    vertical: AppConstants.smallPadding,
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // Hiển thị 2 cột
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.68, // Ép tỷ lệ chiều cao/rộng cho thẻ
                   ),
                   itemCount: products.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppConstants.smallPadding),
                   itemBuilder: (context, index) {
-                    final sp = products[index];
-                    return _ProductCard(product: sp);
+                    return _buildGridProductCard(context, products[index]);
                   },
                 ),
               ),
@@ -137,15 +131,9 @@ class ProductsByCategoryScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class _ProductCard extends StatelessWidget {
-  final Product product;
-
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
+  // --- THIẾT KẾ THẺ SẢN PHẨM DẠNG LƯỚI ---
+  Widget _buildGridProductCard(BuildContext context, Product product) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -158,111 +146,151 @@ class _ProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 10,
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Row(
-            children: [
-              // Ảnh / Icon sản phẩm
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryThis.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
-                ),
-                child: const Icon(
-                  Icons.laptop_mac_rounded,
-                  size: AppConstants.iconSizeLarge,
-                  color: AppColors.primaryThis,
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Ảnh sản phẩm có bo góc trên
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        product.assetImagePath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.laptop_mac,
+                            size: 50,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  // Tag "Chính hãng" góc trái
+                  Positioned(
+                    top: 8,
+                    left: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Colors.blueAccent,
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(8),
+                          bottomRight: Radius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Chính hãng',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(width: AppConstants.defaultPadding),
+            // 2. Thông tin chi tiết bên dưới
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    AppUtils.formatCurrency(product.price),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.priceRed,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
-              // Thông tin sản phẩm
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppUtils.truncateString(product.name, 40),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                  // Hàng chứa Tồn kho và Nút Giỏ hàng
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Kho: ${product.stock}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      AppUtils.formatCurrency(product.price),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.priceRed,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.inventory_2_outlined,
-                            size: 13, color: AppColors.textSecondary),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Còn ${product.stock} sản phẩm',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                      GestureDetector(
+                        onTap: () async {
+                          bool success = await ApiService.addToCart(
+                            'TK_KH001',
+                            product.id,
+                            1,
+                          );
+                          if (!context.mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Đã thêm vào giỏ!'
+                                    : 'Lỗi thêm vào giỏ!',
+                              ),
+                              backgroundColor: success
+                                  ? Colors.green
+                                  : Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryThis.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.add_shopping_cart,
+                            color: AppColors.primaryThis,
+                            size: 18,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Nút thêm vào giỏ
-              GestureDetector(
-                onTap: () async {
-                  // 👉 Khôi phục lại API Thêm vào giỏ hàng
-                  bool success = await ApiService.addToCart('TK_KH001', product.id, 1);
-                  if (!context.mounted) return;
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(success ? 'Đã thêm ${product.name} vào giỏ!' : 'Lỗi thêm vào giỏ!'),
-                      backgroundColor: success ? AppColors.success : Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
                       ),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryThis,
-                    borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.add_shopping_cart_rounded,
-                    color: AppColors.white,
-                    size: AppConstants.iconSizeNormal,
-                  ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

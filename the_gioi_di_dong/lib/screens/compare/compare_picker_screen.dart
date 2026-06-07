@@ -60,15 +60,20 @@ class _ComparePickerScreenState extends State<ComparePickerScreen> {
       appBar: AppBar(
         title: const Text(
           'Chọn sản phẩm so sánh',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: AppColors.primaryThis,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryThis),
+            );
           }
 
           if (snapshot.hasError) {
@@ -79,30 +84,99 @@ class _ComparePickerScreenState extends State<ComparePickerScreen> {
 
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) => setState(() => _keyword = value),
-                  decoration: InputDecoration(
-                    hintText: 'Tìm sản phẩm để so sánh...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+              // Thanh tìm kiếm mượt mà
+              Container(
+                color: AppColors.primaryThis,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _keyword = value),
+                    decoration: InputDecoration(
+                      hintText: 'Tìm sản phẩm để so sánh...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey[500],
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
               ),
+
+              // Hiển thị sản phẩm gốc đang được so sánh
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    const Text(
+                      'Đang so sánh với: ',
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                    Expanded(
+                      child: Text(
+                        widget.baseProduct.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Danh sách kết quả
               Expanded(
                 child: products.isEmpty
-                    ? const Center(child: Text('Không tìm thấy sản phẩm.'))
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.device_unknown_rounded,
+                              size: 60,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Không tìm thấy sản phẩm.',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
                         itemCount: products.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final product = products[index];
                           return _ProductOptionCard(
@@ -128,54 +202,75 @@ class _ProductOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: [
-              Image.asset(
-                product.assetImagePath,
-                width: 72,
-                height: 72,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 44,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.asset(
+                    product.assetImagePath,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 44,
+                      color: Colors.grey,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      AppUtils.formatCurrency(product.price),
-                      style: const TextStyle(
-                        color: AppColors.priceRed,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppUtils.formatCurrency(product.price),
+                        style: const TextStyle(
+                          color: AppColors.priceRed,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
-import 'package:the_gioi_di_dong/core/constants.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
 import 'package:the_gioi_di_dong/models/product_detail_model.dart';
 import 'package:the_gioi_di_dong/models/product_model.dart';
@@ -195,18 +194,19 @@ class _FilterScreenState extends State<FilterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Lọc sản phẩm',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Tìm kiếm & Lọc',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: AppColors.primaryThis,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 0,
         actions: [
           IconButton(
-            tooltip: 'Đặt lại bộ lọc',
+            tooltip: 'Đặt lại',
             onPressed: _resetFilters,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -231,115 +231,159 @@ class _FilterScreenState extends State<FilterScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  onChanged: (value) {
-                    setState(() => _searchKeyword = value);
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Nhập tên sản phẩm cần tìm...',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: AppColors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppConstants.defaultRadius,
+              // Thanh tìm kiếm siêu mượt
+              Container(
+                color: AppColors.primaryThis,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    onChanged: (value) =>
+                        setState(() => _searchKeyword = value),
+                    decoration: InputDecoration(
+                      hintText: 'Nhập tên sản phẩm cần tìm...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey[500],
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.32,
+
+              // Khu vực chọn bộ lọc (Có thể cuộn dọc)
+              Container(
+                color: Colors.white,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.35,
+                ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppConstants.defaultPadding),
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _FilterSection(
-                        title: 'Hãng',
+                        title: 'Hãng sản xuất',
                         options: _brands,
                         selectedValue: _selectedBrand,
-                        onSelected: (value) {
-                          setState(() => _selectedBrand = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedBrand = value),
                       ),
                       _FilterSection(
-                        title: 'Giá tiền',
+                        title: 'Mức giá',
                         options: _priceFilters
                             .map((filter) => filter.label)
                             .toList(),
                         selectedValue: _selectedPrice,
-                        onSelected: (value) {
-                          setState(() => _selectedPrice = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedPrice = value),
                       ),
                       _FilterSection(
-                        title: 'Cấu hình',
+                        title: 'Bộ nhớ RAM',
                         options: _ramOptions,
                         selectedValue: _selectedRam,
-                        onSelected: (value) {
-                          setState(() => _selectedRam = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedRam = value),
                       ),
                       _FilterSection(
-                        title: 'CPU',
+                        title: 'Dòng CPU',
                         options: _cpuOptions,
                         selectedValue: _selectedCpu,
-                        onSelected: (value) {
-                          setState(() => _selectedCpu = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedCpu = value),
                       ),
                       _FilterSection(
-                        title: 'Ổ cứng',
+                        title: 'Dung lượng ổ cứng',
                         options: _storageOptions,
                         selectedValue: _selectedStorage,
-                        onSelected: (value) {
-                          setState(() => _selectedStorage = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedStorage = value),
                       ),
                       _FilterSection(
-                        title: 'Thông số',
+                        title: 'Thông số khác',
                         options: _specOptions,
                         selectedValue: _selectedSpec,
-                        onSelected: (value) {
-                          setState(() => _selectedSpec = value);
-                        },
+                        onSelected: (value) =>
+                            setState(() => _selectedSpec = value),
                       ),
                     ],
                   ),
                 ),
               ),
+
+              // Header số lượng kết quả
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Text(
-                  '${filteredProducts.length} sản phẩm phù hợp',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 16,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tìm thấy ${filteredProducts.length} sản phẩm phù hợp',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // Danh sách sản phẩm
               Expanded(
                 child: filteredProducts.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Không có sản phẩm phù hợp với bộ lọc.',
-                          style: TextStyle(color: AppColors.textSecondary),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off_rounded,
+                              size: 60,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Không có sản phẩm nào khớp với bộ lọc.',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          ],
                         ),
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                         itemCount: filteredProducts.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           return _FilteredProductCard(
                             item: filteredProducts[index],
@@ -371,7 +415,7 @@ class _FilterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -380,35 +424,36 @@ class _FilterSection extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             child: Row(
               children: options.map((option) {
                 final isSelected = option == selectedValue;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: 10),
                   child: ChoiceChip(
                     label: Text(option),
                     selected: isSelected,
                     onSelected: (_) => onSelected(option),
-                    selectedColor: AppColors.primaryThis.withValues(
-                      alpha: 0.35,
-                    ),
-                    backgroundColor: AppColors.white,
-                    side: BorderSide(
-                      color: isSelected
-                          ? AppColors.primaryThis
-                          : Colors.grey.shade300,
+                    showCheckmark: false, // Ẩn dấu check mặc định
+                    selectedColor: AppColors.primaryThis,
+                    backgroundColor: Colors.grey[100],
+                    elevation: 0,
+                    side: BorderSide.none, // Bỏ viền cứng
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     labelStyle: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: isSelected ? Colors.white : Colors.black87,
                       fontWeight: isSelected
                           ? FontWeight.bold
-                          : FontWeight.normal,
+                          : FontWeight.w500,
+                      fontSize: 13,
                     ),
                   ),
                 );
@@ -431,78 +476,106 @@ class _FilteredProductCard extends StatelessWidget {
     final product = item.product;
     final detail = item.detail;
 
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppConstants.defaultRadius),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ProductDetailScreen(product: product),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  product.assetImagePath,
-                  width: 76,
-                  height: 76,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 76,
-                    height: 76,
-                    color: AppColors.primaryThis.withValues(alpha: 0.12),
-                    child: const Icon(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailScreen(product: product),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Khu vực ảnh sản phẩm
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.asset(
+                    product.assetImagePath,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
                       Icons.laptop_mac_rounded,
-                      color: AppColors.primaryThis,
+                      color: Colors.grey,
+                      size: 50,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                const SizedBox(width: 12),
+                // Khu vực thông tin
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      AppUtils.formatCurrency(product.price),
-                      style: const TextStyle(
-                        color: AppColors.priceRed,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 6),
+                      Text(
+                        AppUtils.formatCurrency(product.price),
+                        style: const TextStyle(
+                          color: AppColors.priceRed,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _buildSpecLine(detail),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                      const SizedBox(height: 8),
+                      // Hiển thị dải thông số kỹ thuật dạng Tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _buildSpecLine(detail),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -511,7 +584,7 @@ class _FilteredProductCard extends StatelessWidget {
 
   String _buildSpecLine(ProductDetailModel? detail) {
     if (detail == null) return 'Đang cập nhật cấu hình';
-    return '${detail.cpu} | ${detail.ram} | ${detail.rom}';
+    return '${detail.cpu} • ${detail.ram} • ${detail.rom}';
   }
 }
 

@@ -342,97 +342,113 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildProductCard(BuildContext context, Product product) {
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(product: product),
-          ),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(product: product),
+        ),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: const [
+          borderRadius: BorderRadius.circular(16), // Bo góc tròn hơn
+          boxShadow: [
             BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
+              color: Colors.black.withOpacity(0.05), // Bóng mờ nhạt và sang hơn
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          // Dùng Stack để đè cái nhãn Giảm giá lên ảnh
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-                child: Image.asset(
-                  product.assetImagePath,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.laptop_mac,
-                        size: 50,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: Image.asset(
+                      product.assetImagePath,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Row(
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          AppUtils.formatCurrency(product.price),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.priceRed,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          height: 1.3,
                         ),
                       ),
-                      _IconActionButton(
-                        icon: Icons.compare_arrows,
-                        color: Colors.blue,
-                        tooltip: 'So sánh',
-                        onTap: () => _openComparePicker(context, product),
-                      ),
-                      const SizedBox(width: 6),
-                      _IconActionButton(
-                        icon: Icons.add_shopping_cart,
-                        color: AppColors.primaryThis,
-                        tooltip: 'Thêm vào giỏ',
-                        onTap: () => _addToCart(context, product),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppUtils.formatCurrency(product.price),
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          // Gom 2 nút bấm lại cho gọn
+                          Row(
+                            children: [
+                              _IconActionButton(
+                                icon: Icons.compare_arrows,
+                                color: Colors.blueGrey,
+                                tooltip: 'So sánh',
+                                onTap: () =>
+                                    _openComparePicker(context, product),
+                              ),
+                              const SizedBox(width: 4),
+                              _IconActionButton(
+                                icon: Icons.add_shopping_cart,
+                                color: AppColors.primaryThis,
+                                tooltip: 'Thêm giỏ',
+                                onTap: () => _addToCart(context, product),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            // Thêm Tag "Hot" hoặc "Giảm giá" ở góc trái
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'HOT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],

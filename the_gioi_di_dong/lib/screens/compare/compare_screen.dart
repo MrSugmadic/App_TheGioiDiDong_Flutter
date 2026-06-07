@@ -42,139 +42,202 @@ class _CompareScreenState extends State<CompareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'So sánh sản phẩm',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'So sánh chi tiết',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: AppColors.primaryThis,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: FutureBuilder<List<_CompareProduct>>(
         future: _compareFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryThis),
+            );
           }
 
           final items = snapshot.data ?? [];
+          if (items.length < 2) return const SizedBox();
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: _CompareTable(items: items),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Phần Header hiển thị 2 ảnh sản phẩm và giá
+                _buildProductHeaders(items[0], items[1]),
+
+                const Divider(height: 1, thickness: 1),
+
+                // Phần Body hiển thị thông số so sánh
+                _buildSpecRow(
+                  'Tồn kho',
+                  '${items[0].product.stock} ${items[0].product.unit}',
+                  '${items[1].product.stock} ${items[1].product.unit}',
+                  isEven: true,
+                ),
+                _buildSpecRow(
+                  'Vi xử lý (CPU)',
+                  items[0].detail?.cpu,
+                  items[1].detail?.cpu,
+                  isEven: false,
+                ),
+                _buildSpecRow(
+                  'Bộ nhớ RAM',
+                  items[0].detail?.ram,
+                  items[1].detail?.ram,
+                  isEven: true,
+                ),
+                _buildSpecRow(
+                  'Ổ cứng (ROM)',
+                  items[0].detail?.rom,
+                  items[1].detail?.rom,
+                  isEven: false,
+                ),
+                _buildSpecRow(
+                  'Màn hình',
+                  items[0].detail?.screen,
+                  items[1].detail?.screen,
+                  isEven: true,
+                ),
+                _buildSpecRow(
+                  'Card đồ họa (VGA)',
+                  items[0].detail?.vga,
+                  items[1].detail?.vga,
+                  isEven: false,
+                ),
+                _buildSpecRow(
+                  'Tính năng khác',
+                  items[0].detail?.other,
+                  items[1].detail?.other,
+                  isEven: true,
+                ),
+
+                const SizedBox(height: 40),
+              ],
             ),
           );
         },
       ),
     );
   }
-}
 
-class _CompareTable extends StatelessWidget {
-  final List<_CompareProduct> items;
-
-  const _CompareTable({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return Table(
-      defaultColumnWidth: const FixedColumnWidth(170),
-      border: TableBorder.all(color: Colors.grey.shade300),
+  // Header 2 sản phẩm (Ảnh + Tên + Giá)
+  Widget _buildProductHeaders(_CompareProduct p1, _CompareProduct p2) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _row('Sản phẩm', items.map(_productCell).toList(), height: 170),
-        _row(
-          'Giá',
-          items
-              .map(
-                (item) =>
-                    _textCell(AppUtils.formatCurrency(item.product.price)),
-              )
-              .toList(),
-        ),
-        _row(
-          'Tồn kho',
-          items
-              .map(
-                (item) => _textCell(
-                  '${item.product.stock ?? 0} ${item.product.unit ?? ''}',
-                ),
-              )
-              .toList(),
-        ),
-        _row('CPU', items.map((item) => _textCell(item.detail?.cpu)).toList()),
-        _row('RAM', items.map((item) => _textCell(item.detail?.ram)).toList()),
-        _row(
-          'Ổ cứng',
-          items.map((item) => _textCell(item.detail?.rom)).toList(),
-        ),
-        _row(
-          'Màn hình',
-          items.map((item) => _textCell(item.detail?.screen)).toList(),
-        ),
-        _row('VGA', items.map((item) => _textCell(item.detail?.vga)).toList()),
-        _row(
-          'Khác',
-          items.map((item) => _textCell(item.detail?.other)).toList(),
-        ),
+        Expanded(child: _buildProductHeaderItem(p1)),
+        Container(width: 1, height: 250, color: Colors.grey[200]), // Vách ngăn
+        Expanded(child: _buildProductHeaderItem(p2)),
       ],
     );
   }
 
-  TableRow _row(String title, List<Widget> cells, {double height = 82}) {
-    return TableRow(children: [_titleCell(title, height), ...cells]);
-  }
-
-  Widget _titleCell(String text, double height) {
-    return Container(
-      height: height,
-      padding: const EdgeInsets.all(10),
-      color: AppColors.primaryThis.withValues(alpha: 0.16),
-      alignment: Alignment.centerLeft,
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _textCell(String? text) {
-    return Container(
-      height: 82,
-      padding: const EdgeInsets.all(10),
-      color: Colors.white,
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text == null || text.trim().isEmpty ? 'Đang cập nhật' : text,
-        style: const TextStyle(fontSize: 13, height: 1.3),
+  Widget _buildProductHeaderItem(_CompareProduct item) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Container(
+            height: 120,
+            padding: const EdgeInsets.all(8),
+            child: Image.asset(
+              item.product.assetImagePath,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) =>
+                  const Icon(Icons.laptop_mac, size: 60, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            item.product.name,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppUtils.formatCurrency(item.product.price),
+            style: const TextStyle(
+              color: AppColors.priceRed,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _productCell(_CompareProduct item) {
+  // Dòng thông số (Zebra-striping)
+  Widget _buildSpecRow(
+    String title,
+    String? val1,
+    String? val2, {
+    required bool isEven,
+  }) {
+    final v1 = (val1 == null || val1.trim().isEmpty) ? 'Đang cập nhật' : val1;
+    final v2 = (val2 == null || val2.trim().isEmpty) ? 'Đang cập nhật' : val2;
+
     return Container(
-      height: 170,
-      padding: const EdgeInsets.all(10),
-      color: Colors.white,
+      color: isEven ? Colors.grey[50] : Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Center(
-              child: Image.asset(
-                item.product.assetImagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 42,
-                  color: Colors.grey,
-                ),
+          // Tiêu đề thông số
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.grey[200],
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.grey[800],
               ),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            item.product.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          // Giá trị của 2 bên
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      v1,
+                      style: const TextStyle(fontSize: 13, height: 1.4),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                Container(width: 1, color: Colors.grey[200]),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      v2,
+                      style: const TextStyle(fontSize: 13, height: 1.4),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

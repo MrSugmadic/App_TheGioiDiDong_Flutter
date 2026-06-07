@@ -93,8 +93,11 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         selectedItemColor: AppColors.primaryThis,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
+        unselectedItemColor: Colors.grey[400],
+        showUnselectedLabels:
+            false, // Ẩn chữ khi không chọn (Rất quan trọng để UI sang hơn)
+        showSelectedLabels: true,
+        elevation: 10,
         selectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 12,

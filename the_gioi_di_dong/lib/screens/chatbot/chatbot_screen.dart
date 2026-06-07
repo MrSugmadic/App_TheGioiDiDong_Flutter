@@ -3,7 +3,6 @@ import '../../services/gemini_service.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
-//import '../../core/constants.dart';
 
 class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
@@ -134,16 +133,33 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Xóa lịch sử chat?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.delete_sweep, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text(
+                'Xóa lịch sử?',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ],
+          ),
           content: const Text(
-            'Anh/Chị có chắc muốn xóa toàn bộ cuộc trò chuyện với TGDĐ AI Assistant không?',
+            'Anh/Chị có chắc muốn xóa toàn bộ cuộc trò chuyện này không?',
+            style: TextStyle(fontSize: 15),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Hủy'),
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Hủy',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -151,10 +167,13 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 await clearChatHistory();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFBC05),
-                foregroundColor: Colors.black,
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: const Text('Xóa'),
+              child: const Text('Xóa ngay'),
             ),
           ],
         );
@@ -169,9 +188,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
     setState(() {
       messages.add({'role': 'user', 'text': text});
-
       messages.add({'role': 'bot', 'text': 'Đang nhập...'});
-
       isLoading = true;
     });
 
@@ -189,9 +206,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
     setState(() {
       messages.removeLast();
-
       messages.add({'role': 'bot', 'text': reply});
-
       isLoading = false;
     });
 
@@ -213,21 +228,20 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
 
   Widget buildBotAvatar() {
     return Container(
-      width: 34,
-      height: 34,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
         color: AppColors.primaryThis,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white, width: 2),
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: const Icon(Icons.support_agent, size: 20, color: Colors.black),
+      child: const Icon(Icons.support_agent, size: 22, color: Colors.black),
     );
   }
 
@@ -239,20 +253,32 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
       return Align(
         alignment: Alignment.centerRight,
         child: Container(
-          margin: const EdgeInsets.only(top: 6, bottom: 6, left: 70, right: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          margin: const EdgeInsets.only(top: 8, bottom: 8, left: 60, right: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFFCFEAFF),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2196F3), Color(0xFF00B0FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(
-              18,
+              20,
             ).copyWith(bottomRight: const Radius.circular(4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Text(
             message['text'] ?? '',
             style: const TextStyle(
               fontSize: 15,
-              height: 1.35,
-              color: Colors.black87,
+              height: 1.4,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -260,24 +286,25 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6, bottom: 6, left: 10, right: 60),
+      padding: const EdgeInsets.only(top: 8, bottom: 8, left: 16, right: 60),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           buildBotAvatar(),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.primaryThis,
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(
-                  18,
+                  20,
                 ).copyWith(bottomLeft: const Radius.circular(4)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -287,15 +314,22 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: const [
                         SizedBox(
-                          width: 14,
-                          height: 14,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.black,
+                            color: AppColors.primaryThis,
                           ),
                         ),
-                        SizedBox(width: 8),
-                        Text('Đang nhập...', style: TextStyle(fontSize: 15)),
+                        SizedBox(width: 10),
+                        Text(
+                          'Đang nhập...',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ],
                     )
                   : Text(
@@ -313,29 +347,43 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     );
   }
 
+  // Cải tiến: Cuộn ngang cho các câu hỏi nhanh
   Widget buildQuickQuestions() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
-      color: Colors.grey.shade100,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: quickQuestions.map((question) {
-          return ActionChip(
-            label: Text(
-              question,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            backgroundColor: Colors.white,
-            side: BorderSide(color: Colors.grey.shade300),
-            onPressed: isLoading
-                ? null
-                : () {
-                    sendMessage(quickText: question);
-                  },
-          );
-        }).toList(),
+      color: Colors.grey.shade50,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: quickQuestions.map((question) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ActionChip(
+                label: Text(
+                  question,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey.shade700,
+                  ),
+                ),
+                backgroundColor: Colors.white,
+                elevation: 0.5,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: Colors.blueGrey.shade100),
+                ),
+                onPressed: isLoading
+                    ? null
+                    : () => sendMessage(quickText: question),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -343,13 +391,13 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   Widget buildInputArea() {
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
               offset: const Offset(0, -2),
             ),
           ],
@@ -365,25 +413,22 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 minLines: 1,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintText: 'Nhập câu hỏi của Anh/Chị...',
+                  hintText: 'Nhập câu hỏi...',
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
+                    horizontal: 16,
                     vertical: 12,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(22),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(22),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(24),
                     borderSide: const BorderSide(
-                      color: Color(0xFFFFBC05),
+                      color: AppColors.primaryThis,
                       width: 1.5,
                     ),
                   ),
@@ -391,30 +436,33 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                 onSubmitted: (_) => sendMessage(),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             InkWell(
               onTap: isLoading ? null : () => sendMessage(),
               borderRadius: BorderRadius.circular(24),
-              child: Container(
-                width: 48,
-                height: 48,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: isLoading
                       ? Colors.grey.shade300
                       : AppColors.primaryThis,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  boxShadow: isLoading
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primaryThis.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: const Icon(
                   Icons.send_rounded,
-                  color: Colors.black,
-                  size: 22,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
             ),
@@ -428,22 +476,23 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
     return Container(
       width: double.infinity,
       color: AppColors.primaryThis,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Row(
         children: [
           Container(
-            width: 9,
-            height: 9,
-            decoration: const BoxDecoration(
-              color: Colors.green,
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: const Color(0xFF00E676),
               shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           const Text(
             'Đang trực tuyến • Hỗ trợ mua sắm 24/7',
             style: TextStyle(
-              color: Colors.black87,
+              color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -456,23 +505,23 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: AppColors.primaryThis,
         elevation: 0,
         title: const Text(
           'TGDĐ AI Assistant',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             tooltip: 'Xóa lịch sử chat',
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline, color: Colors.white),
             onPressed: isLoading ? null : showClearChatDialog,
           ),
         ],
@@ -483,7 +532,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              padding: const EdgeInsets.only(top: 16, bottom: 16),
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 return buildMessage(messages[index]);
