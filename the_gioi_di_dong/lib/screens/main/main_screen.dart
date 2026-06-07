@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
 import 'package:the_gioi_di_dong/screens/auth/login_screen.dart';
-import 'package:the_gioi_di_dong/screens/category/category_screen.dart';
+import 'package:the_gioi_di_dong/screens/promotion/promotion_screen.dart';
 import 'package:the_gioi_di_dong/screens/chatbot/chatbot_screen.dart';
 import 'package:the_gioi_di_dong/screens/home/home_screen.dart';
 import 'package:the_gioi_di_dong/screens/notification/notification_screen.dart';
@@ -64,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       const HomeScreen(),
-      const CategoryScreen(),
+      const PromotionScreen(),
       const NotificationScreen(),
       _isLoggedIn ? ProfileScreen(userEmail: _userEmail) : const LoginScreen(),
     ];
@@ -108,12 +108,12 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Trang chủ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_outlined),
-            activeIcon: Icon(Icons.grid_view_rounded),
-            label: 'Danh mục',
+            icon: Icon(Icons.local_offer_outlined),
+            activeIcon: Icon(Icons.local_offer),
+            label: 'Khuyến mãi',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.headphones_battery),
+            icon: Icon(Icons.notifications),
             activeIcon: Icon(Icons.notifications),
             label: 'Thông báo',
           ),
