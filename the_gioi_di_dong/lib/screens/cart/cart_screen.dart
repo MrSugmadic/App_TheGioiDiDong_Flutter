@@ -224,12 +224,34 @@ class _CartScreenState extends State<CartScreen> {
                                         ),
                                         _qtyButton(
                                           icon: Icons.add,
-                                          onTap: () => cart.addItem(
-                                            item.id,
-                                            item.name,
-                                            item.price,
-                                            item.imageUrl,
-                                          ),
+                                          onTap: () {
+                                            // LOGIC GIỚI HẠN SỐ LƯỢNG MUA TỐI ĐA 10
+                                            if (item.quantity >= 10) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Chỉ được mua tối đa 10 sản phẩm cho món này!',
+                                                  ),
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  duration: const Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              cart.addItem(
+                                                item.id,
+                                                item.name,
+                                                item.price,
+                                                item.imageUrl,
+                                              );
+                                            }
+                                          },
                                         ),
                                         const Spacer(),
                                         Text(
