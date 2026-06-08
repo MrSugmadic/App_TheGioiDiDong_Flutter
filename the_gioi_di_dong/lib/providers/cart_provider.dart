@@ -74,6 +74,12 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Xóa hẳn một sản phẩm khỏi giỏ hàng
+  void removeItem(String productId) {
+    _items.remove(productId);
+    notifyListeners();
+  }
+
   // 3. Xóa sạch giỏ hàng (Dùng sau khi thanh toán xong)
   void clearCart() {
     _items.clear();

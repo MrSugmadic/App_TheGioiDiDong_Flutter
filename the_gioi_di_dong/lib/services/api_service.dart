@@ -299,6 +299,18 @@ class ApiService {
     }
   }
 
+  static Future<bool> clearCartOnServer(String maTk) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/cart/clear/$maTk'),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Lỗi xóa toàn bộ giỏ hàng server: $e');
+      return false;
+    }
+  }
+
   static Future<OrderModel?> createOrder({
     required String maTk,
     required String hoTen,
@@ -325,33 +337,72 @@ class ApiService {
           'tongTien': tongTien,
           'giamGia': giamGia,
           'thanhTien': thanhTien,
-          'items': items.map((item) => item.toJson()).toList(),
+          'items': items.map((e) => e.toJson()).toList(),
         }),
       );
+
+      final decodedBody = utf8.decode(response.bodyBytes);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return OrderModel.fromJson(jsonDecode(decodedBody));
+      }
+
+      print('Lỗi tạo đơn hàng ${response.statusCode}: $decodedBody');
+      return null;
+    } catch (e) {
+      print('Lỗi tạo đơn hàng: $e');
+      return null;
+    }
+  }
+
+  static Future<List<OrderModel>> getOrdersByUser(String maTk) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/orders/user/$maTk'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data
+            .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      print('Lỗi lấy đơn hàng: $e');
+      return [];
+    }
+  }
+
+  static Future<OrderModel?> getOrderDetail(String maHd) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/orders/$maHd'));
 
       if (response.statusCode == 200) {
         return OrderModel.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
       }
+
       return null;
     } catch (e) {
+      print('Lỗi lấy chi tiết đơn hàng: $e');
       return null;
     }
   }
 
-  static Future<void> clearCartOnServer(String maTk) async {
-    if (maTk.isEmpty) return;
-    await http.delete(Uri.parse('$baseUrl/cart/$maTk'));
-  }
+  static Future<Map<String, dynamic>> fetchAdminOrderDetail(
+    String orderId,
+  ) async {
+    try {
+      // Lưu ý: Ông check lại xem đường dẫn API bên Spring Boot có đúng là /admin/orders/{id} không nhé
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/orders/$orderId'),
+      );
 
-  static Future<Map<String, dynamic>> fetchAdminOrderDetail(String maHd) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/admin/orders/${Uri.encodeComponent(maHd)}'),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(utf8.decode(response.bodyBytes));
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes));
+      }
+      throw Exception('Lỗi server: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Không thể kết nối Backend: $e');
     }
-
-    throw Exception('Loi server: ${response.statusCode}');
   }
 }
