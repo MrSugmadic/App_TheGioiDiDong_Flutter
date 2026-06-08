@@ -94,7 +94,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     return _AdminItem(
       type: _AdminType.order,
       id: id,
-      title: 'Đơn hàng $id',
+      title: 'Đơn hàng #$id',
       subtitle:
           '${order['trangThai'] ?? 'Chưa rõ'} • ${AppUtils.formatCurrency(_toDouble(order['thanhTien']))}',
       leading: Icons.receipt_long_outlined,
@@ -163,10 +163,10 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
       await ApiService.adminPatch(_patchPath(item), result);
       if (!mounted) return;
       _reload();
-      _showMessage('Đã cập nhật ${item.title}');
+      _showMessage('Đã cập nhật ${item.title}', isSuccess: true);
     } catch (e) {
       if (!mounted) return;
-      _showMessage('Lỗi cập nhật: $e');
+      _showMessage('Lỗi cập nhật: $e', isError: true);
     }
   }
 
@@ -174,17 +174,36 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xóa dữ liệu?'),
-        content: Text('Bạn chắc chắn muốn xóa "${item.title}" không?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+            SizedBox(width: 8),
+            Text('Xóa dữ liệu?', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          'Bạn chắc chắn muốn xóa "${item.title}" không?',
+          style: const TextStyle(fontSize: 15),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Xóa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Xóa ngay'),
           ),
         ],
       ),
@@ -195,10 +214,10 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
       await ApiService.adminDelete(_deletePath(item));
       if (!mounted) return;
       _reload();
-      _showMessage('Đã xóa ${item.title}');
+      _showMessage('Đã xóa ${item.title}', isSuccess: true);
     } catch (e) {
       if (!mounted) return;
-      _showMessage('Lỗi xóa: $e');
+      _showMessage('Lỗi xóa: $e', isError: true);
     }
   }
 
@@ -232,10 +251,20 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  void _showMessage(
+    String message, {
+    bool isSuccess = false,
+    bool isError = false,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isSuccess
+            ? Colors.green
+            : (isError ? Colors.red : Colors.black87),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   double _toDouble(Object? value) {
@@ -246,19 +275,21 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F1F1),
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: AppColors.primaryThis,
+        foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 0,
         actions: [
           IconButton(
             tooltip: 'Tải lại',
             onPressed: _reload,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
@@ -266,11 +297,13 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
         future: _itemsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryThis),
+            );
           }
           if (snapshot.hasError) {
             return _AdminEmptyState(
-              icon: Icons.wifi_off,
+              icon: Icons.wifi_off_rounded,
               title: 'Không tải được dữ liệu',
               message: '${snapshot.error}',
             );
@@ -286,11 +319,15 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
           }
 
           return RefreshIndicator(
+            color: AppColors.primaryThis,
             onRefresh: () async => _reload(),
             child: ListView.separated(
-              padding: const EdgeInsets.all(12),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.all(16),
               itemCount: items.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final item = items[index];
                 return _AdminListTile(
@@ -353,14 +390,22 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
       );
       if (!mounted) return;
       _reload();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Đã cập nhật: $status')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã cập nhật: $status'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi cập nhật: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi cập nhật: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isUpdating = false);
     }
@@ -388,19 +433,28 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F1F1),
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text('Xử lý đơn ${widget.orderId}'),
+        title: Text(
+          'Xử lý đơn #${widget.orderId}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         backgroundColor: AppColors.primaryThis,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _orderFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryThis),
+            );
           }
-          if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+          if (snapshot.hasError ||
+              snapshot.data == null ||
+              snapshot.data!.isEmpty) {
             return _AdminEmptyState(
               icon: Icons.receipt_long_outlined,
               title: 'Không tải được đơn hàng',
@@ -415,16 +469,17 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
           final canAdvance = status != 'Đã hủy' && nextStatus != status;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _infoCard(order),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _processCard(status),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _itemsCard(items),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     if (canAdvance)
@@ -433,29 +488,49 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
                           onPressed: _isUpdating
                               ? null
                               : () => _updateStatus(nextStatus),
-                          icon: const Icon(Icons.arrow_forward),
-                          label: Text('Chuyển sang "$nextStatus"'),
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 20,
+                          ),
+                          label: Text(
+                            'Chuyển "$nextStatus"',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryThis,
-                            foregroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
                           ),
                         ),
                       ),
-                    if (canAdvance) const SizedBox(width: 10),
+                    if (canAdvance) const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _isUpdating
                             ? null
                             : () => _updateStatus('Đã hủy'),
-                        icon: const Icon(Icons.cancel_outlined),
-                        label: const Text('Hủy đơn'),
+                        icon: const Icon(Icons.cancel_outlined, size: 20),
+                        label: const Text(
+                          'Hủy đơn',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -469,21 +544,68 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Mã đơn: ${order['maHd'] ?? widget.orderId}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Row(
+            children: [
+              const Icon(Icons.receipt_long, color: AppColors.primaryThis),
+              const SizedBox(width: 8),
+              Text(
+                'Mã đơn: #${order['maHd'] ?? widget.orderId}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text('Khách hàng: ${order['hoTen'] ?? 'Chưa rõ'}'),
-          Text('Số điện thoại: ${order['soDienThoai'] ?? 'Chưa rõ'}'),
-          Text('Địa chỉ: ${order['diaChi'] ?? 'Chưa rõ'}'),
-          const SizedBox(height: 8),
-          Text('Ngày lập: ${order['ngayLap'] ?? ''}'),
-          Text(
-            'Thành tiền: ${AppUtils.formatCurrency(_toDouble(order['thanhTien']))}',
-            style: const TextStyle(
-              color: AppColors.priceRed,
-              fontWeight: FontWeight.bold,
+          const Divider(height: 24),
+          _infoRow(Icons.person_outline, '${order['hoTen'] ?? 'Chưa rõ'}'),
+          _infoRow(
+            Icons.phone_outlined,
+            '${order['soDienThoai'] ?? 'Chưa rõ'}',
+          ),
+          _infoRow(
+            Icons.location_on_outlined,
+            '${order['diaChi'] ?? 'Chưa rõ'}',
+          ),
+          _infoRow(Icons.calendar_today_outlined, '${order['ngayLap'] ?? ''}'),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tổng thanh toán:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                AppUtils.formatCurrency(_toDouble(order['thanhTien'])),
+                style: const TextStyle(
+                  color: AppColors.priceRed,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.grey[600]),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14, height: 1.3),
             ),
           ),
         ],
@@ -497,28 +619,87 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Quá trình xử lý',
+            'Trục thời gian xử lý',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8),
-          ..._statuses.map((status) {
+          const SizedBox(height: 16),
+          ..._statuses.asMap().entries.map((entry) {
+            final index = entry.key;
+            final status = entry.value;
             final reached = _isReached(currentStatus, status);
-            return ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                reached ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: reached ? Colors.green : Colors.grey,
-              ),
-              title: Text(status),
+            final isLast = index == _statuses.length - 1;
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: reached
+                            ? AppColors.primaryThis
+                            : Colors.grey[300],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        size: 12,
+                        color: reached ? Colors.white : Colors.transparent,
+                      ),
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 2,
+                        height: 30,
+                        color: reached
+                            ? AppColors.primaryThis
+                            : Colors.grey[300],
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: reached
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: reached ? Colors.black87 : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           }),
           if (currentStatus == 'Đã hủy')
-            const ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.cancel, color: Colors.red),
-              title: Text('Đã hủy'),
+            Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Colors.redAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 12, color: Colors.white),
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  'Đã hủy',
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -534,26 +715,38 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
             'Sản phẩm',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8),
-          if (items.isEmpty) const Text('Chưa có chi tiết sản phẩm'),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            const Text(
+              'Chưa có chi tiết sản phẩm',
+              style: TextStyle(color: Colors.grey),
+            ),
           ...items.whereType<Map<String, dynamic>>().map((item) {
             final image = item['hinhAnh']?.toString();
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Image.asset(
                       Product.imageAssetPath(image),
                       width: 48,
                       height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
-                          const Icon(Icons.image_not_supported, size: 48),
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.laptop_mac,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,10 +755,18 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
                           item['tenSp']?.toString() ?? 'Sản phẩm',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
+                          ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           'x${item['soLuong'] ?? 0} • ${AppUtils.formatCurrency(_toDouble(item['thanhTien']))}',
-                          style: const TextStyle(color: Colors.black54),
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -582,10 +783,17 @@ class _AdminOrderProcessScreenState extends State<AdminOrderProcessScreen> {
   Widget _adminCard({required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -657,33 +865,72 @@ class _AdminEditDialogState extends State<_AdminEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Sửa ${widget.item.title}'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        'Sửa thông tin',
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: _fields.map((field) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TextField(
-                controller: _controllers[field.key],
-                keyboardType: field.isNumber ? TextInputType.number : null,
-                decoration: InputDecoration(
-                  labelText: field.label,
-                  border: const OutlineInputBorder(),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.item.title,
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            ..._fields.map((field) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TextField(
+                  controller: _controllers[field.key],
+                  keyboardType: field.isNumber ? TextInputType.number : null,
+                  decoration: InputDecoration(
+                    labelText: field.label,
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryThis,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }),
+          ],
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: const Text(
+            'Hủy',
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+          ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, _buildPayload()),
-          child: const Text('Lưu'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryThis,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 0,
+          ),
+          child: const Text(
+            'Lưu thay đổi',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -705,47 +952,92 @@ class _AdminListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primaryThis.withValues(alpha: 0.2),
-          child: Icon(item.leading, color: Colors.black87),
-        ),
-        title: Text(
-          item.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            item.subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: item.type == _AdminType.order ? 'Xử lý đơn' : 'Sửa',
-              onPressed: onEdit,
-              icon: Icon(
-                item.type == _AdminType.order
-                    ? Icons.manage_history_outlined
-                    : Icons.edit_outlined,
-              ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryThis.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    item.leading,
+                    color: AppColors.primaryThis,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  children: [
+                    IconButton(
+                      tooltip: item.type == _AdminType.order
+                          ? 'Xử lý đơn'
+                          : 'Sửa',
+                      onPressed: onEdit,
+                      icon: Icon(
+                        item.type == _AdminType.order
+                            ? Icons.manage_history_outlined
+                            : Icons.edit_outlined,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Xóa',
+                      onPressed: onDelete,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            IconButton(
-              tooltip: 'Xóa',
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -771,18 +1063,33 @@ class _AdminEmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 72, color: Colors.black54),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 60, color: Colors.grey[400]),
+            ),
+            const SizedBox(height: 24),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54, height: 1.4),
+              style: TextStyle(
+                color: Colors.grey[600],
+                height: 1.4,
+                fontSize: 14,
+              ),
             ),
           ],
         ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:the_gioi_di_dong/core/app_colors.dart';
-import 'package:the_gioi_di_dong/core/constants.dart';
 import 'package:the_gioi_di_dong/core/utils.dart';
 import 'package:the_gioi_di_dong/models/order_model.dart';
 import 'package:the_gioi_di_dong/providers/cart_provider.dart';
